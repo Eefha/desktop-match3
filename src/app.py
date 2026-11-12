@@ -1449,6 +1449,10 @@ def run(icons, seed=None, autohost=None, autojoin=None, quiet=False):
             cfg = game.settings.take_result()
             if cfg:
                 game.apply_setup(cfg)
+            for e in pygame.event.get():      # 只认“关窗口”，其余丢掉，别让队列堆积
+                if e.type == pygame.QUIT:
+                    game.exit_save()
+                    running = False
             game.draw()
             pygame.display.flip()
             continue
