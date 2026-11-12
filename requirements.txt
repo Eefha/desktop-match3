@@ -1,0 +1,6 @@
+# 运行依赖（Windows）
+pygame>=2.6.1
+Pillow>=10.0.0
+
+# 打包用（不跑打包可以不装）
+pyinstaller>=6.0
