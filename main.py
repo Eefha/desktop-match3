@@ -135,6 +135,16 @@ def selftest():
         assert box.contains(btn), "重排按钮跑出底条"
         assert not btn.colliderect(
             pygame.Rect(int(part.bx), int(part.by), part.bw, part.rows * part.cell_h))
+
+        # 「设置」按钮：在底条里、不压棋盘、不和另外两个按钮 / 得分块打架
+        sbtn = part.settings_rect()
+        assert box.contains(sbtn), "设置按钮跑出底条"
+        assert not sbtn.colliderect(btn), "设置按钮压住重排按钮"
+        assert not sbtn.colliderect(pygame.Rect(box.right - 104, box.y, 104, box.h))
+        assert not sbtn.colliderect(
+            pygame.Rect(int(part.bx), int(part.by), part.bw, part.rows * part.cell_h))
+        assert part.settings_hit(sbtn.center) and not part.settings_hit(btn.center)
+        lines.append(f"设置按钮 OK {sbtn.w}x{sbtn.h} @({sbtn.x},{sbtn.y})")
         assert part.manual == part.MANUAL == 3
         before = [row[:] for row in part.board.grid]
         assert part.do_manual_shuffle()

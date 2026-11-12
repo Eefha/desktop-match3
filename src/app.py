@@ -140,6 +140,8 @@ class Game:
         self.nick = str(self.stats.get("nick") or "")[:8]
         self.setup = self.stats.get("setup") if isinstance(
             self.stats.get("setup"), dict) else {}
+        # 设置窗口只自动弹一次：看过（哪怕点了取消）就不再打扰
+        self.seen_setup = bool(self.stats.get("seen_setup"))
         self.net.nick = self.nick
         # 前几次启动给一行很淡的提示，之后不再出现（免得长期露馅）
         self.hints = int(self.stats.get("hints", 0))
@@ -321,6 +323,15 @@ class Game:
 
     def manual_hit(self, pos) -> bool:
         return self.state == "play" and self.manual_rect().collidepoint(pos)
+
+    def settings_rect(self):
+        """底部条上「重新排列」左边的「设置」按钮：不记快捷键也能点到。"""
+        m = self.manual_rect()
+        w, h = 74, 30
+        return pygame.Rect(m.x - 8 - w, m.centery - h // 2, w, h)
+
+    def settings_hit(self, pos) -> bool:
+        return self.state == "play" and self.settings_rect().collidepoint(pos)
 
     def do_manual_shuffle(self) -> bool:
         """玩家自己点重排：不扣分，只消耗每局的次数。"""
@@ -526,6 +537,7 @@ class Game:
                            "games": self.stats.get("games", 0),
                            "hints": int(self.stats.get("hints", 0)),
                            "nick": self.nick,
+                           "seen_setup": bool(self.seen_setup),
                            "setup": self.setup}, f, ensure_ascii=False)
         except Exception:
             pass
@@ -1015,7 +1027,7 @@ class Game:
         label_w, score_w = 112, 104
         btn = self.manual_rect()
         x0 = box.x + label_w
-        x1 = btn.x - 10
+        x1 = self.settings_rect().x - 10
         ew = max(88.0, (x1 - x0) / 5.0)
 
         panel = pygame.Surface(box.size, pygame.SRCALPHA)
@@ -1030,6 +1042,17 @@ class Game:
                          (int(label_w - 10), 11), (int(label_w - 10), box.h - 11))
         pygame.draw.line(panel, (255, 255, 255, 22),
                          (int(box.w - score_w), 11), (int(box.w - score_w), box.h - 11))
+
+        # 「设置」按钮：不记 Ctrl+J 也能点开玩法/联机窗口
+        sbtn = self.settings_rect()
+        shov = self.settings_hit(pygame.mouse.get_pos())
+        sr = pygame.Rect(sbtn.x - box.x, sbtn.y - box.y, sbtn.w, sbtn.h)
+        if shov:
+            pygame.draw.rect(panel, (255, 255, 255, 46), sr, border_radius=6)
+            pygame.draw.rect(panel, (232, 196, 104, 120), sr, width=1, border_radius=6)
+        else:
+            pygame.draw.rect(panel, (255, 255, 255, 18), sr, border_radius=6)
+            pygame.draw.rect(panel, (255, 255, 255, 40), sr, width=1, border_radius=6)
 
         # 「重新排列」按钮（卡住了自己点，不扣分）
         on = self.manual > 0 and not self.busy
@@ -1100,6 +1123,8 @@ class Game:
             col = (112, 118, 130)
         self.blit_text(f"重新排列 {self.manual}", 10, col, btn.center,
                        anchor="center", bold=False, shadow=0)
+        self.blit_text("设置", 10, (255, 255, 255) if shov else (206, 214, 228),
+                       sbtn.center, anchor="center", bold=False, shadow=0)
 
     def _draw_records(self):
         """Tab 唤出的完整榜单：小、暗、贴边，像系统浮层。"""
@@ -1320,11 +1345,18 @@ class Game:
                            addr=s.get("addr") or "",
                            btaddr=s.get("btaddr") or "")
 
+    def mark_setup_seen(self):
+        if self.seen_setup:
+            return
+        self.seen_setup = True
+        self._save_stats()
+
     def apply_setup(self, cfg):
         """子窗口点“开始”之后，按选择进单机 / 开房 / 进房。"""
         self.nick = str(cfg.get("nick") or "")[:8]
         self.net.nick = self.nick
         mode = cfg.get("mode") or "solo"
+        self.seen_setup = True
         self.setup = {"mode": mode,
                       "transport": cfg.get("transport") or "lan",
                       "role": cfg.get("role") or "host",
@@ -1428,6 +1460,13 @@ def run(icons, seed=None, autohost=None, autojoin=None, quiet=False):
     if quiet and game.net.panel:
         game.net.panel = ""
 
+    # 第一次运行（还没存过任何玩法选择）：直接把设置窗口摆出来，
+    # 否则玩家打开只看到一屏图标，根本不知道玩法/联机在哪
+    if (not quiet and not game.seen_setup and not game.setup
+            and not autohost and not autojoin
+            and not os.environ.get("DM3_OPEN_SETTINGS")):
+        game.open_settings()
+
     # 自检用：DM3_OPEN_SETTINGS="A:join:lan" 直接开设置窗口（截图 / 联调）
     probe = os.environ.get("DM3_OPEN_SETTINGS")
     if probe and probe != "0":
@@ -1440,8 +1479,12 @@ def run(icons, seed=None, autohost=None, autojoin=None, quiet=False):
 
     clock = pygame.time.Clock()
     running = True
+    was_settings = game.settings.open_
     while running:
         dt = min(clock.tick(60) / 1000.0, 0.05)
+        if was_settings and not game.settings.open_:
+            game.mark_setup_seen()            # 关掉了（取消也算看过），下次不再自动弹
+            was_settings = False
 
         # 设置子窗口开着的时候：棋盘冻住，消息都给它，游戏本身不响应任何操作
         if game.settings.open_:
@@ -1495,6 +1538,8 @@ def run(icons, seed=None, autohost=None, autojoin=None, quiet=False):
                         game.net_rematch()
                     elif hit == "quit":
                         running = False
+                elif game.settings_hit(e.pos):
+                    game.net.toggle_panel()        # 点「设置」= 按 Ctrl+J
                 elif game.score_hit(e.pos):
                     game.toggle_records()          # 点底部「本局」= 按 Tab
                 elif game.manual_hit(e.pos):
