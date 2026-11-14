@@ -4,10 +4,13 @@
 
 一个 Windows 小工具：启动后屏幕**左侧**出现一条和桌面几乎一模一样的区域，里面是你的图标，可以像消消乐一样交换、消除、连锁得分；右侧和底部仍然是**真实桌面**，点文件、开软件一切照常。
 
-> **不想装 Python？** 直接下 [`dist/桌面消消乐.exe`](dist/桌面消消乐.exe)（23 MB，免安装单文件，双击即用）。
-> 仓库里这份 exe 是随手打包的产物，代码以 `main.py` 和 `src/` 为准；想自己出包见下文「打包」。
+![效果图](docs/screenshot.png)
 
-> 效果截图请自己补一张放 `docs/screenshot.png`：本仓库不附带截图，因为画面里全是你自己的文件名。
+> 图上那个桌面是 `tools/shot_readme.py` 造的假桌面，文件名全是占位用的，不代表任何人的真实文件。
+
+> **不想装 Python？** 去 [Releases](https://github.com/Eefha/desktop-match3/releases/latest) 下 `DesktopMatch3-v1.0.0.exe`，
+> 或者直接拿仓库里的 [`dist/桌面消消乐.exe`](dist/桌面消消乐.exe) —— 两个是同一个文件（23 MB，免安装单文件，双击即用）。
+> 代码以 `main.py` 和 `src/` 为准，想自己出包见下文「打包」。
 
 ---
 
@@ -101,6 +104,7 @@ src/netcore.py        联机底层：帧协议、连接、TCP、UDP 房间广播
 src/netplay.py        联机房间状态机、两种玩法、面板、实时比分
 src/settings_win.py   设置子窗口：Win32 原生窗口 + pygame 离屏渲染 + 系统 EDIT 输入框
 tools/                截图、冒烟测试、exe 端到端探测
+docs/screenshot.png   README 效果图（假桌面合成，不含真实文件）
 桌面消消乐.spec        PyInstaller 打包配置
 设计方案.md            产品与技术方案
 联机方案.md            联机可行性评估 + 实装说明（附录 C）
@@ -133,6 +137,7 @@ python tools/probe_exe_net.py    # 打包后：exe 当房主 / 当客户端，�
 python tools/probe_settings.py   # 设置窗口：真窗口 + 真鼠标消息，点一遍验证选择/校验/结果
 python tools/shot_settings.py A:join:lan   # 截设置窗口某个状态的图到 preview/
 python tools/probe_settings_live.py        # 真机跑：弹窗 → 点开始 → 窗口关闭、游戏继续
+python tools/shot_readme.py               # 出 README 那张图：假桌面 + 合成壁纸，不碰真实文件
 ```
 
 ## 已知限制
