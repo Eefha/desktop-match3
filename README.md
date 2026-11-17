@@ -108,6 +108,7 @@ docs/screenshot.png   README 效果图（假桌面合成，不含真实文件）
 桌面消消乐.spec        PyInstaller 打包配置
 设计方案.md            产品与技术方案
 联机方案.md            联机可行性评估 + 实装说明（附录 C）
+docs/开发思路.md       为什么这么做：约束、取舍、分层与验证
 ```
 
 设置窗口为什么不用 tkinter：打包用的 Python 不带 Tk，而且游戏窗口是 SDL 的 borderless 全屏条，
