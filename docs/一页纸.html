@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>桌面消消乐 · 项目一页纸</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: #15171b;
+    --body: #2c3138;
+    --muted: #6b7280;
+    --line: #e4e6ea;
+    --accent: #b45309;
+  }
+  html, body { background: #fff; }
+  body {
+    font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+    color: var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+  .sheet {
+    width: 210mm; height: 297mm;
+    padding: 12mm 13mm 9mm;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ---------- 页眉 ---------- */
+  .head { display: flex; align-items: flex-end; justify-content: space-between;
+          border-bottom: 1.6pt solid var(--ink); padding-bottom: 2.6mm; }
+  .head h1 { font-size: 22pt; line-height: 1.05; color: var(--ink); font-weight: 700; letter-spacing: .2pt; }
+  .head h1 small { font-size: 9pt; font-weight: 400; color: var(--muted); margin-left: 2.4mm; letter-spacing: 0; }
+  .head .right { text-align: right; font-size: 7.4pt; color: var(--muted); line-height: 1.55; white-space: nowrap; }
+
+  .lede { font-size: 9.1pt; line-height: 1.6; padding: 2.8mm 0 2.6mm; }
+  .lede b { color: var(--ink); }
+
+  .facts { display: flex; border: .6pt solid var(--line); border-radius: 1.1mm; overflow: hidden; }
+  .facts div { flex: 1; padding: 2mm 2.8mm; border-right: .6pt solid var(--line); }
+  .facts div:last-child { border-right: 0; }
+  .facts dt { font-size: 6.6pt; color: var(--muted); letter-spacing: .35pt; }
+  .facts dd { font-size: 8.2pt; color: var(--ink); font-weight: 600; margin-top: .5mm; }
+
+  /* ---------- 两栏主体 ---------- */
+  .main { display: flex; gap: 6mm; margin-top: 4.6mm; }
+  .col-l { width: 112mm; }
+  .col-r { flex: 1; }
+
+  .sec-title { font-size: 7.2pt; letter-spacing: 1.3pt; color: var(--accent); font-weight: 700; margin-bottom: 2.4mm; }
+
+  .blk { margin-bottom: 4mm; }
+  .blk h3 { font-size: 9.5pt; color: var(--ink); font-weight: 700; line-height: 1.3;
+            display: flex; gap: 2mm; align-items: baseline; }
+  .blk h3 i { font-style: normal; font-size: 7.4pt; color: var(--accent); font-weight: 700; letter-spacing: .4pt; }
+  .blk p { font-size: 8.05pt; line-height: 1.56; margin-top: 1.1mm; padding-left: 6mm; }
+  .blk p b { color: var(--ink); }
+  .blk p .q { color: var(--muted); }
+
+  /* ---------- 右栏 ---------- */
+  .shot { width: 100%; height: 74mm; object-fit: cover; object-position: top center;
+          border: .6pt solid var(--line); border-radius: 1mm; display: block; }
+  .cap { font-size: 6.5pt; color: var(--muted); margin-top: 1.1mm; line-height: 1.4; }
+  .metrics { margin-top: 3.4mm; }
+  .metrics .row { display: flex; justify-content: space-between; align-items: baseline;
+                  padding: 1.4mm 0; border-bottom: .5pt dotted #d8dbe0; }
+  .metrics .row:last-child { border-bottom: 0; }
+  .metrics span { font-size: 7.2pt; color: var(--muted); }
+  .metrics b { font-size: 8.8pt; color: var(--ink); }
+  .note { margin-top: 3mm; padding: 2.2mm 2.6mm; background: #faf7f2;
+          border-left: 1.6pt solid var(--accent); font-size: 7.1pt; line-height: 1.5; color: var(--body); }
+  .note b { color: var(--ink); }
+
+  /* ---------- 取舍表 ---------- */
+  .trade { margin-top: 1.4mm; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; font-size: 7.45pt; line-height: 1.42; padding: 1.75mm 2mm; }
+  th { font-size: 6.7pt; color: var(--muted); letter-spacing: .4pt; font-weight: 600;
+       border-bottom: .7pt solid var(--ink); padding-bottom: 1.1mm; }
+  td { border-bottom: .5pt solid var(--line); vertical-align: top; }
+  td.k { color: var(--ink); font-weight: 600; width: 33mm; }
+  td.g { color: var(--muted); width: 33mm; }
+  td.r { color: var(--body); }
+
+  /* ---------- 工程化 ---------- */
+  .eng { margin-top: 5.6mm; border-top: .6pt solid var(--line); padding-top: 3.2mm; }
+  .eng ul { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 1.9mm 6mm; }
+  .eng li { font-size: 7.6pt; line-height: 1.48; padding-left: 3.2mm; position: relative; }
+  .eng li::before { content: ""; position: absolute; left: 0; top: 1.45mm;
+                    width: 1.3mm; height: 1.3mm; background: var(--accent); border-radius: 50%; }
+  .eng li b { color: var(--ink); }
+
+  /* ---------- 页脚 ---------- */
+  .foot { margin-top: auto; border-top: 1.6pt solid var(--ink); padding-top: 1.9mm;
+          display: flex; justify-content: space-between; font-size: 7.1pt; color: var(--muted); }
+  .foot b { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="head">
+    <h1>桌面消消乐<small>Desktop Match-3</small></h1>
+    <div class="right">Windows 10 / 11 · 单文件免安装<br>MIT 开源 · 独立开发</div>
+  </div>
+
+  <p class="lede">
+    把 <b>桌面图标变成消消乐棋子</b>：屏幕左侧 58% 宽是一条“长得跟桌面一样”的游戏区，
+    右侧和底下那条任务栏仍是<b>真桌面</b> —— 真图标、真右键、照常开软件。没有标题栏、没有开始界面，<b>ESC 一按就消失</b>。
+  </p>
+
+  <dl class="facts">
+    <div><dt>角色</dt><dd>独立开发（9 轮迭代）</dd></div>
+    <div><dt>技术栈</dt><dd>Python · pygame · Win32</dd></div>
+    <div><dt>规模</dt><dd>核心 4.9k 行 / 21 文件</dd></div>
+    <div><dt>产物</dt><dd>23 MB 单文件 exe</dd></div>
+  </dl>
+
+  <div class="main">
+    <div class="col-l">
+      <div class="sec-title">四个最花心思的地方</div>
+
+      <div class="blk">
+        <h3><i>01</i>重画桌面，但绝不碰桌面</h3>
+        <p>
+          取 <b>256px 系统原图</b>：SHGetFileInfoW 拿图标索引 → SHGetImageList(SHIL_JUMBO) → IImageList::GetIcon → GetDIBits 转 32bpp + alpha。
+          壁纸不重画，而是把<b>整屏壁纸裁出窗口那一块</b>，分界线上像素连续，看不出盖了块窗口。
+          布局也全取系统真值：SM_CXICONSPACING、纵向 ×1.24 留文字位、启动前 SetProcessDpiAwareness(2)。
+          <span class="q">真挪图标（LVM_SETITEMPOSITION）视觉更真，但程序崩了会毁掉用户桌面，放弃。</span>
+        </p>
+      </div>
+
+      <div class="blk">
+        <h3><i>02</i>让 10 种棋子一定分得清</h3>
+        <p>
+          <span class="q">问题：</span>桌面上常有好几个同款白纸文档图标，直接取前 10 个会“分不清哪是哪”。
+          <span class="q">解法：</span>先做 <b>8×8 特征向量去重</b>（距离 &lt;0.05 视为同款），再<b>按色相分 6 桶，每桶最多 2 个、无彩色桶最多 1 个</b>，
+          不足 6 种用内置图案补齐 —— 保证十种棋子颜色一定拉得开。
+        </p>
+      </div>
+
+      <div class="blk">
+        <h3><i>03</i>没有服务器也能双人联机</h3>
+        <p>
+          <b>房主就是服务器</b>：TCP 上跑「4 字节长度 + JSON」帧，UDP 47500 广播自动发现，蓝牙走 RFCOMM（ctypes 调 ws2_32，零第三方库）。
+          共享棋盘用<b>先到先得</b>而非租约锁 —— 房主天然串行，省掉锁表与“抢输了”的回滚抖动，手感更干脆。
+          同步传<b>结算后的整盘（140 字节）+ 版本号</b>而不是事件流，避开“两边随机序列分叉”这类查不出的 bug；
+          双方棋子一致靠房主把图标拼成 960×96 PNG（base64 约 30KB）一次传完。
+        </p>
+      </div>
+
+      <div class="blk">
+        <h3><i>04</i>设置窗口：能借系统组件就不自己写</h3>
+        <p>
+          打包解释器没带 Tk（tkinter 直接不可用），两套 GUI 又容易抢消息泵 —— 于是开 <b>Win32 原生窗口</b>：
+          pygame 离屏渲染后 StretchDIBits 贴到 WM_PAINT，文字输入交给系统 <b>EDIT 控件</b>，
+          中文输入法、选区、粘贴全部免费；消息由主循环单线程 PeekMessage 驱动。
+        </p>
+      </div>
+    </div>
+
+    <div class="col-r">
+      <img class="shot" src="screenshot.png" alt="运行效果">
+      <div class="cap">实际运行画面（脚本生成的演示桌面，非真实文件）</div>
+
+      <div class="metrics">
+        <div class="row"><span>棋盘</span><b>14 × 10 = 140 格</b></div>
+        <div class="row"><span>棋子</span><b>10 种，取自桌面</b></div>
+        <div class="row"><span>联机快照</span><b>&lt; 300 B / 帧</b></div>
+        <div class="row"><span>3 人带宽</span><b>2 – 10 KB/s</b></div>
+      </div>
+
+      <div class="note">
+        <b>面试可展开讲：</b>为什么用覆盖式而不是真改桌面；为什么联机同步整盘而不是事件流；
+        Win32 那层踩过的坑（StretchDIBits 参数、SDL 事件堆积、PyInstaller 缓存）。
+      </div>
+    </div>
+  </div>
+
+  <div class="trade">
+    <div class="sec-title">取舍速览</div>
+    <table>
+      <tr><th>当时的决策</th><th>放弃的方案</th><th>为什么</th></tr>
+      <tr><td class="k">覆盖式重画桌面</td><td class="g">真挪桌面图标</td><td class="r">视觉只差一点，但崩溃不会毁掉用户桌面</td></tr>
+      <tr><td class="k">只占左侧 58%</td><td class="g">整屏覆盖 + 复刻任务栏</td><td class="r">真桌面就在旁边，删掉一半代码反而更真</td></tr>
+      <tr><td class="k">直接发 140 字节整盘</td><td class="g">只发 seed 各自生成</td><td class="r">换掉“随机序列不一致”这类极难复查的 bug</td></tr>
+      <tr><td class="k">先到先得</td><td class="g">claim 占位 + 租约锁</td><td class="r">房主天然串行，省掉回滚抖动，手感更干脆</td></tr>
+      <tr><td class="k">传结算后整盘</td><td class="g">传 clear / fall 事件流</td><td class="r">140 字节，且不会因随机补充而两边分叉</td></tr>
+    </table>
+  </div>
+
+  <div class="eng">
+    <div class="sec-title">工程化与验证</div>
+    <ul>
+      <li><b>纯逻辑中间层</b>：engine.py 不依赖 pygame 与网络，单机与联机共用同一套算分</li>
+      <li><b>自检打进 exe</b>：<code>--selftest</code> 无窗口跑布局、计分、联机全链路</li>
+      <li><b>60 步一致性</b>：连续游走比对显示层与数据层，防“看着消了但数据没消”</li>
+      <li><b>真实鼠标探测</b>：用 Windows 消息点打包后的 exe，而不是只测源码</li>
+    </ul>
+  </div>
+
+  <div class="foot">
+    <div>源码 <b>github.com/Eefha/desktop-match3</b> · 下载 <b>releases/latest</b></div>
+    <div>完整取舍与复盘：<b>docs/开发思路.md</b></div>
+  </div>
+
+</div>
+</body>
+</html>
