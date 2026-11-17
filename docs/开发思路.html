@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>桌面消消乐 · 开发思路</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ink: #15171b; --body: #2c3138; --muted: #6b7280;
+    --line: #e4e6ea; --accent: #b45309; --soft: #faf7f2;
+  }
+  html, body { background: #fff; }
+  body { font-family: "Microsoft YaHei UI", "Microsoft YaHei", "Segoe UI", sans-serif;
+         color: var(--body); -webkit-font-smoothing: antialiased; }
+
+  .page { width: 210mm; min-height: 297mm; padding: 12mm 13mm 10mm;
+          display: flex; flex-direction: column; page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+
+  .head { display: flex; align-items: flex-end; justify-content: space-between;
+          border-bottom: 1.6pt solid var(--ink); padding-bottom: 2.6mm; }
+  .head h1 { font-size: 19pt; line-height: 1.1; color: var(--ink); font-weight: 700; }
+  .head h1 small { font-size: 8.6pt; font-weight: 400; color: var(--muted); margin-left: 2.4mm; }
+  .head .right { text-align: right; font-size: 7.2pt; color: var(--muted); line-height: 1.55; white-space: nowrap; }
+
+  .lede { font-size: 8.6pt; line-height: 1.6; padding: 2.6mm 0 0; color: var(--body); }
+  .lede b { color: var(--ink); }
+
+  .sec { margin-top: 6.2mm; }
+  .sec-title { font-size: 7.2pt; letter-spacing: 1.3pt; color: var(--accent); font-weight: 700; margin-bottom: 2.2mm; }
+  .sec p { font-size: 8.05pt; line-height: 1.58; }
+  .sec p + p { margin-top: 1.4mm; }
+  .sec p b { color: var(--ink); }
+  .sec p .q { color: var(--muted); }
+
+  .quote { background: var(--soft); border-left: 2pt solid var(--accent);
+           padding: 2.8mm 3.4mm; font-size: 9.4pt; line-height: 1.5; color: var(--ink); font-weight: 600; }
+  .quote span { display: block; font-size: 7.4pt; font-weight: 400; color: var(--muted); margin-top: 1.2mm; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: .6mm; }
+  th, td { text-align: left; font-size: 7.4pt; line-height: 1.45; padding: 2.05mm 2mm; vertical-align: top; }
+  th { font-size: 6.7pt; color: var(--muted); letter-spacing: .4pt; font-weight: 600;
+       border-bottom: .7pt solid var(--ink); padding-bottom: 1mm; }
+  td { border-bottom: .5pt solid var(--line); }
+  td.k { color: var(--ink); font-weight: 600; width: 44mm; }
+  td.g { color: var(--muted); width: 40mm; }
+  .mono { font-family: "Cascadia Mono", Consolas, "Courier New", monospace; }
+
+  .tree { font-family: "Cascadia Mono", Consolas, "Courier New", monospace;
+          font-size: 7.3pt; line-height: 1.62; background: #f7f8fa; border: .5pt solid var(--line);
+          border-radius: 1mm; padding: 2.6mm 3mm; color: #2b3038; white-space: pre; }
+  .tree b { color: var(--ink); font-weight: 700; }
+
+  .three { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm; margin-top: 2.6mm; }
+  .three div { border-top: 1.2pt solid var(--accent); padding-top: 1.6mm; }
+  .three h4 { font-size: 8pt; color: var(--ink); font-weight: 700; margin-bottom: .8mm; }
+  .three p { font-size: 7.2pt; line-height: 1.45; color: var(--muted); }
+
+  .rounds { display: grid; grid-template-columns: 13mm 1fr; gap: 0; }
+  .rounds .r { font-size: 7.2pt; color: var(--accent); font-weight: 700; padding: 1.35mm 0;
+               border-bottom: .4pt dotted #dcdfe3; }
+  .rounds .t { font-size: 7.4pt; color: var(--body); padding: 1.35mm 0;
+               border-bottom: .4pt dotted #dcdfe3; }
+  .rounds .t b { color: var(--ink); }
+
+  .box { margin-top: 4mm; background: var(--soft); border: .6pt solid #eee2cf;
+         border-radius: 1mm; padding: 3mm 3.4mm; }
+  .box h4 { font-size: 7.6pt; color: var(--accent); letter-spacing: .8pt; margin-bottom: 1.6mm; }
+  .box p { font-size: 8.1pt; line-height: 1.62; }
+  .box p b { color: var(--ink); }
+
+  .foot { margin-top: auto; border-top: 1.6pt solid var(--ink); padding-top: 1.9mm;
+          display: flex; justify-content: space-between; font-size: 7.1pt; color: var(--muted); }
+  .foot b { color: var(--ink); font-weight: 600; }
+  .pno { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<!-- ================= 第 1 页 ================= -->
+<div class="page">
+  <div class="head">
+    <h1>开发思路<small>桌面消消乐 · 设计与取舍</small></h1>
+    <div class="right">第 1 / 2 页<br>功能与用法见 README</div>
+  </div>
+
+  <p class="lede">
+    这份文档讲的是<b>“为什么这么做”</b>，不是功能清单。做法是：先用一句约束把问题缩小，
+    再用取舍把方案减到最薄，然后把纯逻辑锁在中间层，最后用自动化手段去测那些“肉眼看不见”的地方。
+  </p>
+
+  <div class="sec">
+    <div class="sec-title">一、从一句约束开始，而不是从玩法开始</div>
+    <div class="quote">
+      “屏幕上不能出现任何‘游戏’的东西。”
+      <span>大多数项目从“我要做个消消乐”出发，会一路走向开始界面、关卡、皮肤、音效。这个项目反过来。</span>
+    </div>
+    <p style="margin-top:2.4mm">
+      约束一旦立住，后面九成的选择都自动有答案了：<b>要不要加音效、要不要震屏、要不要排行榜弹窗</b>，
+      拿它一比就能定，不必争论审美。三条硬原则直接落地：画面无游戏感（没有标题栏 / 开始界面 / 按钮 / 说明）；
+      背景必须是真桌面（裁真实壁纸、用系统原图、套系统真实间距）；随时能走（ESC 立刻消失，退出时分数照样入榜）。
+    </p>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">二、七个关键取舍（每个都留着“放弃过什么”）</div>
+    <table>
+      <tr><th>当时的决策</th><th>放弃的方案</th><th>理由</th></tr>
+      <tr><td class="k">覆盖式重画桌面</td><td class="g">真挪桌面图标<br>（LVM_SETITEMPOSITION）</td>
+          <td>视觉只差一点，但程序崩了会毁掉用户桌面 —— 摸鱼工具不该担这个风险</td></tr>
+      <tr><td class="k">只占左侧 58%</td><td class="g">整屏覆盖 + 复刻任务栏</td>
+          <td>真任务栏就在旁边，复刻不如借用；<b>删掉一半代码，真实度反而更高</b></td></tr>
+      <tr><td class="k">用用户自己的桌面图标</td><td class="g">现成美术素材</td>
+          <td>零美术成本且每人棋盘独一无二；代价是要用算法保证十种棋子一定分得清</td></tr>
+      <tr><td class="k">直接发 140 字节整盘</td><td class="g">只发 seed 各自生成</td>
+          <td>换掉“两边随机序列不一致”这类极难复现的 bug，140 字节对 TCP 和蓝牙都是零压力</td></tr>
+      <tr><td class="k">先到先得</td><td class="g">claim 占位 + 350ms 租约锁</td>
+          <td>房主是唯一权威、天然串行；省掉锁表与“抢输了”的回滚抖动，手感反而更干脆</td></tr>
+      <tr><td class="k">传结算后整盘 + 消掉的位置</td><td class="g">传 clear / fall / spawn 事件流</td>
+          <td>事件流要重放随机补充，两边一旦分叉棋盘就歪了；整盘只有 140 字节</td></tr>
+      <tr><td class="k">手写 Win32 原生窗口</td><td class="g">tkinter</td>
+          <td>打包解释器没带 Tk；两套 GUI 争消息泵会和 SDL 无边框窗口打架</td></tr>
+    </table>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">三、分层：让“纯逻辑”待在中间</div>
+    <div class="tree">main.py
+ └─ <b>app.py</b>            渲染与主循环：布局、缓动、连锁、计分、结算、联机接入
+     ├─ <b>engine.py</b>      纯逻辑：三消判定、重力、死局、洗牌、同步结算
+     ├─ winicons.py     平台适配：256px 图标、壁纸填充、图标间距、DPI
+     ├─ netcore.py      传输：帧协议 / TCP / UDP 广播 / 蓝牙 RFCOMM
+     ├─ netplay.py      联机状态机：房间、两种玩法、实时比分
+     └─ settings_win.py 窗口外壳：Win32 + 离屏渲染 + 系统 EDIT 控件</div>
+    <p style="margin-top:2.2mm">
+      依赖方向单向：<b>engine.py 不知道 pygame 存在，也不知道网络存在</b>。判断分层对不对的标准只有一句：
+      中间层能不能被另一个完全不同的前端直接用。
+    </p>
+    <div class="three">
+      <div><h4>可测</h4><p>不开窗口就能跑 60 步一致性与死局检测</p></div>
+      <div><h4>可当权威</h4><p>联机时房主用同一个 resolve_swap 算分，单机与联机不会两套分数</p></div>
+      <div><h4>可移植</h4><p>小程序版能复用同一套公式与随机数，因为逻辑层是干净的</p></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div>源码 <b>github.com/Eefha/desktop-match3</b></div>
+    <div class="pno">1</div>
+  </div>
+</div>
+
+<!-- ================= 第 2 页 ================= -->
+<div class="page">
+  <div class="head">
+    <h1>开发思路<small>怎么验证 · 怎么迭代 · 复盘</small></h1>
+    <div class="right">第 2 / 2 页<br>完整版：docs/开发思路.md</div>
+  </div>
+
+  <div class="sec" style="margin-top:4mm">
+    <div class="sec-title">四、怎么验证“看不见的东西”</div>
+    <p>
+      这个项目的界面是“假装成桌面”，很多问题肉眼看不出来：125% 缩放下格子错位、壁纸接缝对不上、
+      看着消了但数据没消。所以验证手段本身也是设计的一部分。
+    </p>
+    <table style="margin-top:1.6mm">
+      <tr><th>手段</th><th>解决什么</th></tr>
+      <tr><td class="k mono">main.py --selftest</td><td>无窗口跑布局、图标、计分、联机全链路，结果写日志；打包进 exe</td></tr>
+      <tr><td class="k mono">tools/smoke.py</td><td>60 步连续游走，逐步比对显示层与数据层是否始终一致</td></tr>
+      <tr><td class="k mono">tools/net_smoke.py</td><td>两个 Game 走真实 TCP，A / B 两种玩法各跑一遍</td></tr>
+      <tr><td class="k mono">tools/probe_exe_*.py</td><td>用真实 Windows 鼠标消息点打包后的 exe，而不是只测源码</td></tr>
+      <tr><td class="k mono">tools/shot_*.py</td><td>离屏渲染出图，代替“我自己开一下看看”</td></tr>
+      <tr><td class="k mono">tools/shot_readme.py</td><td>把 USERPROFILE 指到临时假桌面 + 合成壁纸，截图不泄露真实文件名</td></tr>
+    </table>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">五、九轮迭代：每轮都能独立交付</div>
+    <div class="rounds">
+      <div class="r">1 – 2</div><div class="t"><b>能跑 & 像桌面</b>：图标→棋子打通三消闭环；壁纸裁切、真实间距、256px 图标、选中框、文件名字体</div>
+      <div class="r">3 – 4</div><div class="t"><b>手感 & 收尾</b>：缓动、碎屑、连锁倍率、死局检测与重排；结算卡片、历史前十、ESC 记分退出</div>
+      <div class="r">5</div><div class="t"><b>专门做减法</b>：整屏 → 左半屏，砍掉复刻任务栏与假文档窗口</div>
+      <div class="r">6</div><div class="t"><b>打包</b>：PyInstaller 单文件，自检塞进 exe</div>
+      <div class="r">7 – 8</div><div class="t"><b>联机</b>：先写评估（三种形态 / 三种权威模型），再实装 TCP + UDP 发现 + 蓝牙，A/B 两模式</div>
+      <div class="r">9</div><div class="t"><b>交互重构</b>：玩法与联机搬进独立原生子窗口，首次运行自动弹窗引导</div>
+    </div>
+    <p style="margin-top:2.2mm">
+      两个刻意选择：<b>先做视觉真实度，再做联机</b>（“像不像桌面”决定这东西能不能用，联机是锦上添花）；
+      <b>第 5 轮专门做减法</b>，不是等到收尾才删代码。
+    </p>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">六、踩过的坑，和它们教的东西</div>
+    <table>
+      <tr><th>坑</th><th>教训</th></tr>
+      <tr><td class="k">打包后打开还是旧界面</td><td>PyInstaller 的 <span class="mono">build/</span> 缓存不因改源码失效，每次必须 <span class="mono">--clean</span> 并删 build；用自检日志核对版本</td></tr>
+      <tr><td class="k">设置窗口一片白</td><td>StretchDIBits 第 12 参是 <span class="mono">iUsage</span>，要传 <span class="mono">DIB_RGB_COLORS = 0</span>；SetBkColor 在 gdi32 不在 user32</td></tr>
+      <tr><td class="k">关掉窗口后键盘失灵</td><td>窗口期间 SDL 事件队列会堆积，只认 QUIT、其余丢弃</td></tr>
+      <tr><td class="k">用户找不到设置入口</td><td>功能做对了不等于能找到：首次自动弹窗 + 底栏常驻按钮 + Ctrl+J 三条路</td></tr>
+      <tr><td class="k">历史最高分被覆盖</td><td>写存档要用“只升不降”的累加式更新，别整份覆盖</td></tr>
+    </table>
+    <p style="margin-top:2mm">
+      共同的一条：这类“窗口 + 图标 + 打包”的项目，难的不是算法，<b>是和操作系统打交道的那一层</b>。
+      所以每个平台调用都单独收进 <span class="mono">winicons.py</span> / <span class="mono">settings_win.py</span>，出问题能一眼定位到哪一层。
+    </p>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">七、如果重来，会改哪里</div>
+    <p>
+      ① 一开始就该只占半屏 —— 整屏覆盖 + 复刻任务栏浪费了大约两轮，最后全被删掉。
+      ② 窗口层应该更早抽象 —— 若第一轮就走通“离屏渲染 → 贴到 Win32 窗口”，后面很多 UI 能更早搬出棋盘。
+      ③ 联机应先做“同种子竞速”再评估共享棋盘，别一上来把仲裁和同步一起做。
+      ④ 还要补：蓝牙双机实测、多显示器、改用 onedir 解决首启 2~3 秒与杀软误报。
+    </p>
+  </div>
+
+  <div class="box">
+    <h4>只给 30 秒时，我会这么讲</h4>
+    <p>
+      ① 它把<b>桌面图标变成棋盘</b>，所以零美术成本、零学习成本，看起来就是桌面；
+      ② 真正的难点全在<b>和操作系统打交道</b>——提取 256px 原图、裁壁纸对齐接缝、DPI、原生子窗口，不在三消算法；
+      ③ 联机<b>不依赖服务器</b>，房主即服务器，两个人连上就能抢同一块盘。
+    </p>
+  </div>
+
+  <div class="foot">
+    <div>源码 <b>github.com/Eefha/desktop-match3</b> · 取舍与复盘全文 <b>docs/开发思路.md</b></div>
+    <div class="pno">2</div>
+  </div>
+</div>
+
+</body>
+</html>
